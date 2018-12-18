@@ -1,0 +1,169 @@
+<html>
+
+<head>
+    <title>
+        <?=$_SESSION[loggedIN]?>
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <style type="text/css">
+        body{
+            font-size: 2rem;
+        }
+        #target {
+            border: 6px solid blue;
+            border-radius: 4px;
+        }
+
+        .row {
+            border: 5px solid yellow;
+            margin: 5%;
+        }
+
+        .title {
+            border: 0px;
+        }
+
+        .check {
+            border: 8px solid blue;
+        }
+
+        .cell {
+            max-width: 100%;
+            max-height: 100%;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+    <script>
+        //***************
+        var targets = [Math.floor(Math.random() * 9)];
+
+
+        $(document).ready(function (e) {
+            $(".img-check").click(function () {
+                $(this).toggleClass("check");
+            });
+            for (const target of targets) {
+                $(".title").append(`<img id="target" src="img/bird${target}.svg" alt="目標鳥">`);
+            }
+            var table = createTable(14, 6, targets);
+            var view = createView(".container-fluid", table, 8);
+            var binary_answer = table.map(value => (targets.includes(value)) ? 1 : 0);
+
+            $(".container-fluid img").on("click", (e) => {
+                $(e.target).toggleClass("check");
+            });
+            $("#submit").on("click", () => {
+                var user_answer = [];
+                for (const el of $(".cell")) {
+                    if ($(el).attr("class").includes("check")) {
+                        user_answer.push(1);
+                    } else {
+                        user_answer.push(0);
+                    }
+                }
+                let result = binary_answer.toString() == user_answer.toString();
+                let correct = binary_answer.filter((elem, key) => elem == 1 && elem == user_answer[key])
+                    .reduce((a, b) => a + b, 0);
+                let choose = user_answer.reduce((a, b) => a + b, 0);
+                console.log(binary_answer, user_answer);
+                console.log("選擇數", choose);
+                console.log("正確數", correct);
+                console.log("錯誤數", choose - correct);
+                console.log("遺漏數", 6 - correct);
+                console.log(result);
+            });
+
+        });
+        function createTable(total, ans, targets) {
+            var table = [];
+
+            for (let n = 0; n < total; n++) {
+                if (n < ans) {
+                    table.push(targets[Math.floor(Math.random() * targets.length)]);
+                } else {
+                    var value = Math.floor(Math.random() * 9);
+                    while (targets.includes(value)) {
+                        value = Math.floor(Math.random() * 9);
+                    }
+                    table.push(value);
+
+                }
+            }
+            console.log(table);
+            shuffle(table);
+            console.log(table);
+            return table;
+        }
+
+        function createView(el, cells, cols) {
+            for (let cell in cells) {
+                let row = Math.floor(cell / cols);
+                if (cell % cols == 0) {
+                    $(el).append("<div id='row" + row + "' class='row'></div>");
+                }
+                $("#row" + row).append("<div class='col'><img src='img/bird" + cells[cell] + ".svg' id='cell" + cell +
+                    "' class='cell'></div>");
+                switch (Math.floor(Math.random()*3)) {
+                    case 0:
+                        $("#row" + row).css("border-color", "red");
+                        break;
+                    case 1:
+                        $("#row" + row).css("border-color", "yellow");
+                        break;
+                    case 2:
+                        $("#row" + row).css("border-color", "green");
+                        break;
+                
+                    default:
+                        break;
+                }
+            }
+            $("#row1").prepend("<div class='col'><div>");
+            $("#row1").append("<div class='col'><div>");
+            return $(el);
+        }
+
+        function shuffle(arr) {
+            let n = arr.length,
+                random;
+            while (0 != n) {
+                random = (Math.random() * n--) >>> 0; // 无符号右移位运算符向下取整
+                [arr[n], arr[random]] = [arr[random], arr[n]] // ES6的结构赋值实现变量互换
+            }
+            return arr;
+        }
+
+        function countdown() {
+            if (timeLeft == -1) {
+                clearTimeout(timerId);
+            } else {
+                elem.innerHTML = timeLeft + ' seconds remaining';
+                timeLeft--;
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="media title">
+        <div class="media-body">
+            練習題1，請你找出和藍色框裡一樣的小鳥，做完請按右下方的紫色鍵。注意!要全部都一樣才是要找的小鳥喔!
+        </div>
+    </div>
+    <div class="container-fluid">
+        <button class="fixed-bottom btn btn-info btn-lg offset-5 col-2" id="submit">送出</button>
+    </div>
+</body>
+
+</html>

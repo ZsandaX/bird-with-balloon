@@ -1,0 +1,251 @@
+<html>
+
+<head>
+    <title>
+        <?=$_SESSION[loggedIN]?>
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <style type="text/css">
+        @media (min-width: 288px) {
+            #pool img {
+                transform: scale(0.1) translate(-50%, -100%);
+            }
+        }
+
+        @media (min-width: 576px) {
+            #pool img {
+                transform: scale(0.2) translate(-50%, -100%);
+            }
+        }
+
+        @media (min-width: 768px) {
+            #pool img {
+                transform: scale(0.3) translate(-50%, -100%);
+            }
+        }
+
+        @media (min-width: 992px) {
+            #pool img {
+                transform: scale(0.4) translate(-50%, -100%);
+            }
+        }
+
+        @media (min-width: 1200px) {
+            #pool img {
+                transform: scale(0.5) translate(-50%, -100%);
+                max-height: 90px;
+                max-width: 66px;
+            }
+        }
+        #rabbit{
+            left: 100%;
+            transform: scale(3) translate(-70%, 30%);
+        }
+        #target {
+            left: 100%;
+            transform: scale(0.8) translate(-180%, 80%);
+            border: 6px solid yellow;
+            border-radius: 4px;
+        }
+
+        body {
+            background-image: url(img/background.svg);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-size: 2rem;
+        }
+        #pool{
+            bottom: 5%;
+        }
+    </style>
+    <script>
+        var pointArr = [];
+        var iconArr = [];
+        var binary_answer = [];
+        var user_answer = [];
+        var display_nums = [4, 2, 3, 4, 4, 3, 5, 3, 2, 3, 4, 3, 3, 4, 3, 5, 3, 2];
+        var radius = 5;
+        var icon_number = 168;
+        var pass_number = 60;
+        var timeLeft = 180;
+
+        if (window.innerWidth > 576) {
+            var radius = 10;
+        }
+        if (window.innerWidth > 768) {
+            var radius = 15;
+        }
+        if (window.innerWidth > 992) {
+            var radius = 20;
+        }
+        if (window.innerWidth > 1200) {
+            var radius = 25;
+        }
+
+        function createIcon(num) {
+            var iconArr = [];
+            for (let i = 0; i < icon_number; i++) {
+                if (i < num) {
+                    iconArr.push(0);
+                } else {
+                    iconArr.push(i % 6 + 1);
+                }
+            }
+            shuffle(iconArr);
+            console.log(iconArr);
+            return iconArr;
+        }
+
+        function randomPoint({
+            w,
+            h
+        }) {
+            const x = parseInt(Math.random() * w);
+            const y = parseInt(Math.random() * h);
+            const r = radius;
+            return {
+                x,
+                y,
+                r
+            };
+        }
+
+        function testOverlay(pointA, pointB) {
+            const xGap = Math.abs(pointA.x - pointB.x);
+            const yGap = Math.abs(pointA.y - pointB.y);
+            const distance = Math.sqrt(xGap * xGap + yGap * yGap);
+            const rGap = pointA.r + pointB.r;
+            return distance <= rGap;
+        }
+
+        function testAvailable(pointArr, newPoint) {
+            let arr = Array.from(pointArr);
+            let aval = true;
+            while (arr.length > 0) {
+                let lastPoint = arr.pop();
+                if (testOverlay(lastPoint, newPoint)) {
+                    aval = false;
+                    break;
+                }
+            }
+            return aval;
+        }
+
+        function shuffle(arr) {
+            let n = arr.length,
+                random;
+            while (0 != n) {
+                random = (Math.random() * n--) >>> 0; // 无符号右移位运算符向下取整
+                [arr[n], arr[random]] = [arr[random], arr[n]] // ES6的结构赋值实现变量互换
+            }
+            return arr;
+        }
+
+        function countdown() {
+            if (timeLeft == -1) {
+                clearTimeout(timerId);
+                checkAnswer();
+            } else if(timeLeft == 90){
+                checkAnswer();
+                timeLeft--;
+            }else {
+                timeLeft--;
+                console.log(timeLeft);
+                if (timeLeft > 0 && timeLeft % 10 == 0) {
+                    let tenSec = (180 - timeLeft) / 10;
+                    let start = display_nums.reduce((a, b, i) => (i < tenSec) ? a + b : a + 0);
+                    let end = display_nums.reduce((a, b, i) => (i <= tenSec) ? a + b : a + 0);
+                    displayAnswer(start, end);
+                    displayOther(tenSec);
+                }
+            }
+        }
+
+        function displayAnswer(start, end) {
+            for (let i = start; i < end; i++) {
+                $(`.icon[src='img/egg0.svg']`).eq(i).show();
+                user_answer.push(0);
+            }
+        }
+        function displayOther(count) {
+            for (let i = 1; i < 7; i++) {
+                $(`.icon[src='img/egg${i}.svg']`).eq(count).show();
+                user_answer.push(0);
+            }
+        }
+
+        function checkAnswer() {
+            let result = binary_answer.toString() == user_answer.toString();
+            let correct = binary_answer.filter((elem, key) => elem == 1 && elem == user_answer[key])
+                .reduce((a, b) => a + b, 0);
+            let choose = user_answer.reduce((a, b) => a + b, 0);
+            console.log(binary_answer, user_answer);
+            console.log("選擇數", choose);
+            console.log("正確數", correct);
+            console.log("錯誤數", choose - correct);
+            console.log("遺漏數", icon_number - correct);
+            console.log(result);
+        }
+    </script>
+</head>
+
+<body>
+    <div class="media title">
+        <div class="media-body">
+            兔子的粉紅色彩蛋不知道掉哪去了? 你可以幫忙牠找到蛋嗎?
+            <img class="col-1 position-absolute" id="rabbit" src="img/rabbit.svg" alt="兔子">
+            <img class="col-1 position-absolute" id="target" src="img/egg0.svg" alt="目標物"></img>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="offset-1 col-10 h-75 fixed-bottom" id="pool"></div>
+        <script type="text/javascript">
+            console.log($("#pool").width(), $("#pool").height());
+            for (let i = 0; i < icon_number; i++) {
+                var point = randomPoint({
+                    w: $("#pool").width(),
+                    h: $("#pool").height()
+                });
+                var check = testAvailable(pointArr, point);
+                if (check) {
+                    pointArr.push(point);
+                } else {
+                    i--;
+                }
+            }
+            console.log(pointArr);
+            iconArr = createIcon(pass_number);
+            binary_answer = iconArr.map(value => (value == 0) ? 1 : 0);
+            for (let key in pointArr) {
+                var icon = $("<img></img>").css("position", "absolute")
+                    .css("left", pointArr[key].x)
+                    .css("top", pointArr[key].y)
+                    .attr("src", "img/egg" + iconArr[key] + ".svg")
+                    .attr("id", key)
+                    .attr("class", "icon img-fluid");
+                $("#pool").append(icon);
+            }
+            $(".icon").hide();
+            displayAnswer(0, 4);
+            displayOther(6);
+            var timerId = setInterval(countdown, 1000);
+
+            $(".icon").on("click", (e) => {
+                $(e.target).hide();
+                user_answer[$(e.target).attr("id")] = 1;
+            });
+        </script>
+    </div>
+</body>
+
+</html>
